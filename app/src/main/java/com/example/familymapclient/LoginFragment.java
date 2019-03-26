@@ -5,10 +5,14 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -34,7 +38,7 @@ import java.net.URL;
  * Use the {@link LoginFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class LoginFragment extends Fragment implements View.OnClickListener {
+public class LoginFragment extends Fragment implements View.OnClickListener, TextWatcher {
     private OnFragmentInteractionListener mListener;
     private View fragmentView;
 
@@ -71,6 +75,28 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
 
         b = v.findViewById(R.id.signInButton);
         b.setOnClickListener(this);
+
+        // add text changed listeners to enable/disable buttons
+        EditText textField = fragmentView.findViewById(R.id.serverHost);
+        textField.addTextChangedListener(this);
+
+        textField = fragmentView.findViewById(R.id.serverPort);
+        textField.addTextChangedListener(this);
+
+        textField = fragmentView.findViewById(R.id.userName);
+        textField.addTextChangedListener(this);
+
+        textField = fragmentView.findViewById(R.id.password);
+        textField.addTextChangedListener(this);
+
+        textField = fragmentView.findViewById(R.id.firstName);
+        textField.addTextChangedListener(this);
+
+        textField = fragmentView.findViewById(R.id.lastName);
+        textField.addTextChangedListener(this);
+
+        textField = fragmentView.findViewById(R.id.email);
+        textField.addTextChangedListener(this);
 
         return v;
     }
@@ -117,6 +143,67 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
                 onSigninButtonClicked(v);
                 break;
         }
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+    }
+
+    @Override
+    public void afterTextChanged(Editable editable) {
+        Button signInButton = fragmentView.findViewById(R.id.signInButton);
+        Button registerButton = fragmentView.findViewById(R.id.registerButton);
+
+        boolean signInEnabled = true;
+        boolean registerEnabled = true;
+
+        EditText textField = fragmentView.findViewById(R.id.serverHost);
+        if (textField.getText().toString().equals("")) {
+            signInEnabled = false;
+            registerEnabled = false;
+        }
+
+        textField = fragmentView.findViewById(R.id.serverPort);
+        if (textField.getText().toString().equals("")) {
+            signInEnabled = false;
+            registerEnabled = false;
+        }
+
+        textField = fragmentView.findViewById(R.id.userName);
+        if (textField.getText().toString().equals("")) {
+            signInEnabled = false;
+            registerEnabled = false;
+        }
+
+        textField = fragmentView.findViewById(R.id.password);
+        if (textField.getText().toString().equals("")) {
+            signInEnabled = false;
+            registerEnabled = false;
+        }
+
+        textField = fragmentView.findViewById(R.id.firstName);
+        if (textField.getText().toString().equals("")) {
+            registerEnabled = false;
+        }
+
+        textField = fragmentView.findViewById(R.id.lastName);
+        if (textField.getText().toString().equals("")) {
+            registerEnabled = false;
+        }
+
+        textField = fragmentView.findViewById(R.id.email);
+        if (textField.getText().toString().equals("")) {
+            registerEnabled = false;
+        }
+
+        signInButton.setEnabled(signInEnabled);
+        registerButton.setEnabled(registerEnabled);
     }
 
     void onSigninButtonClicked(View v) {
@@ -183,7 +270,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         protected void onPostExecute(ServiceCallResult result) {
             if (result.responseCode < 200 || result.responseCode >= 300) {
                 Context context = getActivity();
-                int duration = Toast.LENGTH_LONG;
+                int duration = Toast.LENGTH_SHORT;
 
                 Toast toast = Toast.makeText(context, "Login Failed!", duration);
                 toast.show();
@@ -264,7 +351,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         protected void onPostExecute(ServiceCallResult result) {
             if (result.responseCode < 200 || result.responseCode >= 300) {
                 Context context = getActivity();
-                int duration = Toast.LENGTH_LONG;
+                int duration = Toast.LENGTH_SHORT;
 
                 Toast toast = Toast.makeText(context, "Register Failed!", duration);
                 toast.show();
@@ -323,7 +410,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
 
         protected void onPostExecute(ServiceCallResult result) {
             Context context = getActivity();
-            int duration = Toast.LENGTH_LONG;
+            int duration = Toast.LENGTH_SHORT;
 
             if (result.responseCode < 200 || result.responseCode >= 300) {
                 Toast toast = Toast.makeText(context, "Person Call Failed!", duration);
