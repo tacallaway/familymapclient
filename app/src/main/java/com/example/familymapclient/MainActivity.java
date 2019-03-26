@@ -13,10 +13,6 @@ public class MainActivity extends AppCompatActivity implements LoginFragment.OnF
         setContentView(R.layout.activity_main);
     }
 
-    public void onRegisterClicked(View view) {
-        System.out.println("test");
-    }
-
     @Override
     public void onFragmentInteraction(Uri uri) {
 

@@ -48,7 +48,6 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
      *
      * @return A new instance of fragment LoginFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static LoginFragment newInstance() {
         LoginFragment fragment = new LoginFragment();
         return fragment;
@@ -120,15 +119,81 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    void onRegisterButtonClicked(View v) {
-        new RegisterOperation(fragmentView).execute();
-    }
-
     void onSigninButtonClicked(View v) {
         new SigninOperation(fragmentView).execute();
     }
 
-    private class RegisterOperation extends AsyncTask<String, Void, ServiceCallResult> {
+    void onRegisterButtonClicked(View v) {
+        new RegisterOperation(fragmentView).execute();
+    }
+
+    private class SigninOperation extends AsyncTask<Void, Void, ServiceCallResult> {
+
+        private View view;
+
+        SigninOperation(View view) {
+            this.view = view;
+        }
+
+        @Override
+        protected ServiceCallResult doInBackground(Void... params) {
+
+            String serverHost = ((TextView) view.findViewById(R.id.serverHost)).getText().toString();
+            String serverPort = ((TextView) view.findViewById(R.id.serverPort)).getText().toString();
+            String userName = ((TextView) view.findViewById(R.id.userName)).getText().toString();
+            String password = ((TextView) view.findViewById(R.id.password)).getText().toString();
+
+            try {
+                URL url = new URL("http://" + serverHost + ":" + serverPort + "/user/login");
+
+                HttpURLConnection con = (HttpURLConnection)url.openConnection();
+
+                con.setRequestMethod("POST");
+
+                con.setDoOutput(true);
+
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes("{\n" +
+                        "\"userName\": \"" + userName +"\",\n" +
+                        "\"password\": \"" + password + "\"\n" +
+                        "}");
+                wr.flush();
+                wr.close();
+
+                int responseCode = con.getResponseCode();
+                System.out.println("Response Code : " + responseCode);
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                return new ServiceCallResult(responseCode, response.toString());
+            } catch (MalformedURLException mue) {
+                return new ServiceCallResult(500, mue.getMessage());
+            } catch (IOException ioe) {
+                return new ServiceCallResult(500, ioe.getMessage());
+            }
+        }
+
+        protected void onPostExecute(ServiceCallResult result) {
+            if (result.responseCode < 200 || result.responseCode >= 300) {
+                Context context = getActivity();
+                int duration = Toast.LENGTH_LONG;
+
+                Toast toast = Toast.makeText(context, "Login Failed!", duration);
+                toast.show();
+            } else {
+                new PersonOperation(view).execute(result);
+            }
+        }
+    }
+
+    private class RegisterOperation extends AsyncTask<Void, Void, ServiceCallResult> {
 
         private View view;
 
@@ -137,7 +202,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         }
 
         @Override
-        protected ServiceCallResult doInBackground(String... params) {
+        protected ServiceCallResult doInBackground(Void... params) {
 
             String serverHost = ((TextView) view.findViewById(R.id.serverHost)).getText().toString();
             String serverPort = ((TextView) view.findViewById(R.id.serverPort)).getText().toString();
@@ -197,77 +262,11 @@ public class LoginFragment extends Fragment implements View.OnClickListener {
         }
 
         protected void onPostExecute(ServiceCallResult result) {
-            Context context = getActivity();
-            int duration = Toast.LENGTH_LONG;
-
             if (result.responseCode < 200 || result.responseCode >= 300) {
-                Toast toast = Toast.makeText(context, "Login Failed!", duration);
-                toast.show();
-            } else {
-                new PersonOperation(view).execute(result);
-            }
-        }
-    }
+                Context context = getActivity();
+                int duration = Toast.LENGTH_LONG;
 
-    private class SigninOperation extends AsyncTask<String, Void, ServiceCallResult> {
-
-        private View view;
-
-        SigninOperation(View view) {
-            this.view = view;
-        }
-
-        @Override
-        protected ServiceCallResult doInBackground(String... params) {
-
-            String serverHost = ((TextView) view.findViewById(R.id.serverHost)).getText().toString();
-            String serverPort = ((TextView) view.findViewById(R.id.serverPort)).getText().toString();
-            String userName = ((TextView) view.findViewById(R.id.userName)).getText().toString();
-            String password = ((TextView) view.findViewById(R.id.password)).getText().toString();
-
-            try {
-                URL url = new URL("http://" + serverHost + ":" + serverPort + "/user/login");
-
-                HttpURLConnection con = (HttpURLConnection)url.openConnection();
-
-                con.setRequestMethod("POST");
-
-                con.setDoOutput(true);
-
-                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-                wr.writeBytes("{\n" +
-                        "\"userName\": \"" + userName +"\",\n" +
-                        "\"password\": \"" + password + "\"\n" +
-                        "}");
-                wr.flush();
-                wr.close();
-
-                int responseCode = con.getResponseCode();
-                System.out.println("Response Code : " + responseCode);
-
-                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                String inputLine;
-                StringBuilder response = new StringBuilder();
-
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
-                in.close();
-
-                return new ServiceCallResult(responseCode, response.toString());
-            } catch (MalformedURLException mue) {
-                return new ServiceCallResult(500, mue.getMessage());
-            } catch (IOException ioe) {
-                return new ServiceCallResult(500, ioe.getMessage());
-            }
-        }
-
-        protected void onPostExecute(ServiceCallResult result) {
-            Context context = getActivity();
-            int duration = Toast.LENGTH_LONG;
-
-            if (result.responseCode < 200 || result.responseCode >= 300) {
-                Toast toast = Toast.makeText(context, "Login Failed!", duration);
+                Toast toast = Toast.makeText(context, "Register Failed!", duration);
                 toast.show();
             } else {
                 new PersonOperation(view).execute(result);
