@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +37,7 @@ import java.net.URL;
  * Use the {@link LoginFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class LoginFragment extends Fragment implements View.OnClickListener, TextWatcher {
+public class LoginFragment extends Fragment implements View.OnClickListener, TextWatcher, RadioGroup.OnCheckedChangeListener {
     private OnFragmentInteractionListener mListener;
     private View fragmentView;
 
@@ -71,9 +70,11 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
         this.fragmentView = v;
 
         Button b = v.findViewById(R.id.registerButton);
+        b.setEnabled(false);
         b.setOnClickListener(this);
 
         b = v.findViewById(R.id.signInButton);
+        b.setEnabled(false);
         b.setOnClickListener(this);
 
         // add text changed listeners to enable/disable buttons
@@ -97,6 +98,9 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
 
         textField = fragmentView.findViewById(R.id.email);
         textField.addTextChangedListener(this);
+
+        RadioGroup radioGroup = fragmentView.findViewById(R.id.gender);
+        radioGroup.setOnCheckedChangeListener(this);
 
         return v;
     }
@@ -202,8 +206,20 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
             registerEnabled = false;
         }
 
+        RadioGroup radioGroup = fragmentView.findViewById(R.id.gender);
+        int selectedId = radioGroup.getCheckedRadioButtonId();
+
+        if (selectedId == -1) {
+            registerEnabled = false;
+        }
+
         signInButton.setEnabled(signInEnabled);
         registerButton.setEnabled(registerEnabled);
+    }
+
+    @Override
+    public void onCheckedChanged(RadioGroup group, int checkedId) {
+        afterTextChanged(null);
     }
 
     void onSigninButtonClicked(View v) {
@@ -299,12 +315,12 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
             String lastName = ((TextView) view.findViewById(R.id.lastName)).getText().toString();
             String email = ((TextView) view.findViewById(R.id.email)).getText().toString();
 
-            RadioGroup radioGroup = (RadioGroup) view.findViewById(R.id.gender);
+            RadioGroup radioGroup = view.findViewById(R.id.gender);
             // get selected radio button from radioGroup
             int selectedId = radioGroup.getCheckedRadioButtonId();
 
             // find the radiobutton by returned id
-            RadioButton radioButton = (RadioButton) view.findViewById(selectedId);
+            RadioButton radioButton = view.findViewById(selectedId);
             String gender = radioButton.getText().toString().equals("Male") ? "m" : "f";
 
             try {
