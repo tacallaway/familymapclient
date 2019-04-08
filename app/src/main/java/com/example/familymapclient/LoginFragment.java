@@ -17,6 +17,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,6 +28,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 
 /**
@@ -38,7 +40,6 @@ import java.net.URL;
  * create an instance of this fragment.
  */
 public class LoginFragment extends Fragment implements View.OnClickListener, TextWatcher, RadioGroup.OnCheckedChangeListener {
-    private OnFragmentInteractionListener mListener;
     private View fragmentView;
 
     public LoginFragment() {
@@ -65,7 +66,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_login, container, false);
+        View v = inflater.inflate(R.layout.login_fragment, container, false);
 
         this.fragmentView = v;
 
@@ -103,23 +104,6 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
         radioGroup.setOnCheckedChangeListener(this);
 
         return v;
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     /**
@@ -380,6 +364,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
     private class PersonOperation extends AsyncTask<ServiceCallResult, Void, ServiceCallResult> {
 
         private View view;
+        private String authToken;
 
         PersonOperation(View view) {
             this.view = view;
@@ -394,16 +379,16 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
             String serverPort = ((TextView) view.findViewById(R.id.serverPort)).getText().toString();
 
             try {
-                URL url = new URL("http://" + serverHost + ":" + serverPort + "/person/" + result.getJson().getString("personID"));
+                URL url = new URL("http://" + serverHost + ":" + serverPort + "/person");
 
                 HttpURLConnection con = (HttpURLConnection)url.openConnection();
 
                 con.setRequestMethod("GET");
 
-                con.setRequestProperty("authorization", result.getJson().getString("authToken"));
+                authToken = result.getJson().getString("authToken");
+                con.setRequestProperty("authorization", authToken);
 
                 int responseCode = con.getResponseCode();
-                System.out.println("Response Code : " + responseCode);
 
                 BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
                 String inputLine;
@@ -433,15 +418,128 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
                 toast.show();
             } else {
                 try {
-                    String data = result.getJson().getString("data");
-                    JSONObject jsonData = new JSONObject(data);
-                    Toast toast = Toast.makeText(context, jsonData.getString("firstName") + " " + jsonData.getString("lastName"), duration);
-                    toast.show();
+                    JSONArray list = result.getJson().getJSONArray("data");
+                    new EventOperation(view, authToken, list).execute(result);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         }
+    }
+
+    private class EventOperation extends AsyncTask<ServiceCallResult, Void, ServiceCallResult> {
+
+        private View view;
+        private JSONArray personsArray;
+        private String authToken;
+
+        EventOperation(View view, String authToken, JSONArray personsArray) {
+            this.view = view;
+            this.personsArray = personsArray;
+            this.authToken = authToken;
+        }
+
+        @Override
+        protected ServiceCallResult doInBackground(ServiceCallResult... params) {
+
+            ServiceCallResult result = params[0];
+
+            String serverHost = ((TextView) view.findViewById(R.id.serverHost)).getText().toString();
+            String serverPort = ((TextView) view.findViewById(R.id.serverPort)).getText().toString();
+
+            try {
+                URL url = new URL("http://" + serverHost + ":" + serverPort + "/event");
+
+                HttpURLConnection con = (HttpURLConnection)url.openConnection();
+
+                con.setRequestMethod("GET");
+
+                con.setRequestProperty("authorization", authToken);
+
+                int responseCode = con.getResponseCode();
+
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+
+                return new ServiceCallResult(responseCode, response.toString());
+            } catch (MalformedURLException mue) {
+                return new ServiceCallResult(500, mue.getMessage());
+            } catch (IOException ioe) {
+                return new ServiceCallResult(500, ioe.getMessage());
+            }
+        }
+
+        protected void onPostExecute(ServiceCallResult result) {
+            Context context = getActivity();
+            int duration = Toast.LENGTH_SHORT;
+
+            System.out.println(result.responseCode);
+            System.out.println(result.getBody());
+
+            if (result.responseCode < 200 || result.responseCode >= 300) {
+                Toast toast = Toast.makeText(context, "Event Call Failed!", duration);
+                toast.show();
+            } else {
+                try {
+                    JSONArray eventsArray = result.getJson().getJSONArray("data");
+                    FamilyModel familyModel = getFamilyModel(personsArray, eventsArray);
+                    ((MainActivity)getActivity()).showMapFragment(familyModel);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private FamilyModel getFamilyModel(JSONArray personsArray, JSONArray eventsArray) {
+        FamilyModel familyModel = new FamilyModel();
+
+        try {
+            List<FamilyModel.Person> persons = familyModel.getPersons();
+            for (int i = 0; i < personsArray.length(); i++) {
+                JSONObject personObject = personsArray.getJSONObject(i);
+                FamilyModel.Person person = new FamilyModel.Person(
+                        personObject.getString("personID"),
+                        personObject.getString("firstName"),
+                        personObject.getString("lastName"),
+                        personObject.getString("gender")
+                );
+                person.setDescendant(personObject.getString("descendant"));
+                person.setFather(personObject.getString("father"));
+                person.setMother(personObject.getString("mother"));
+                person.setSpouse(personObject.getString("spouse"));
+
+                familyModel.addPerson(person);
+            }
+
+            List<FamilyModel.Event> events = familyModel.getEvents();
+            for (int i = 0; i < eventsArray.length(); i++) {
+                JSONObject eventObject = eventsArray.getJSONObject(i);
+                FamilyModel.Event event = new FamilyModel.Event(
+                        eventObject.getString("eventID"),
+                        eventObject.getString("descendant"),
+                        eventObject.getString("personID"),
+                        eventObject.getDouble("latitude"),
+                        eventObject.getDouble("longitude"),
+                        eventObject.getString("country"),
+                        eventObject.getString("city"),
+                        eventObject.getString("eventType"),
+                        eventObject.getInt("year")
+                );
+
+                familyModel.addEvent(event);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return familyModel;
     }
 
     private class ServiceCallResult {
@@ -466,6 +564,11 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
 
             try {
                 reader = new JSONObject(body);
+
+                if (reader.has("data")) {
+                    JSONArray dataArray = new JSONArray(reader.getString("data"));
+                    reader.put("data", dataArray);
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
