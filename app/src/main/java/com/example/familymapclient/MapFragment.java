@@ -1,5 +1,6 @@
 package com.example.familymapclient;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -24,19 +25,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class MapFragment extends Fragment {
 
     private View fragmentView;
     private MapView mapView;
     private GoogleMap googleMap;
     private FamilyModel familyModel;
+    private PersonData pd;
 
     public void setFamilyModel(FamilyModel familyModel) {
         this.familyModel = familyModel;
@@ -48,18 +43,59 @@ public class MapFragment extends Fragment {
 
         fragmentView = inflater.inflate(R.layout.map_fragment, container, false);
 
-        Drawable genderIcon = new IconDrawable(getActivity(), FontAwesomeIcons.fa_male).colorRes(R.color.male_icon).sizeDp(40);
+        Drawable genderIcon = new IconDrawable(getActivity(), FontAwesomeIcons.fa_android).colorRes(R.color.android_icon).sizeDp(40);
+
         ((ImageView)fragmentView.findViewById(R.id.genderImageView)).setImageDrawable(genderIcon);
+
+        fragmentView.findViewById(R.id.eventInformation).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (fragmentView.findViewById(R.id.introText).getVisibility() == View.VISIBLE) {
+                    return;
+                }
+
+                Intent intent = new Intent(getActivity(), PersonActivity.class);
+                intent.putExtra("PERSON_ID", pd.personId);
+                intent.putExtra("FAMILY_MODEL", familyModel);
+                startActivity(intent);
+            }
+        });
 
         mapView = fragmentView.findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
 
         mapView.onResume(); // needed to get the map to display immediately
 
-        mapView.getMapAsync(new OnMapReadyCallback() {
+        OnMapReadyCallback omrc = new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap mMap) {
                 googleMap = mMap;
+
+                googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker m) {
+                        pd = (PersonData)m.getTag();
+                        ((TextView)fragmentView.findViewById(R.id.textName)).setText(pd.fullName);
+                        ((TextView)fragmentView.findViewById(R.id.textEvent)).setText(pd.event + ": " + pd.city + ", " + pd.country + " (" + pd.year + ")");
+                        fragmentView.findViewById(R.id.introText).setVisibility(View.GONE);
+                        fragmentView.findViewById(R.id.personInfo).setVisibility(View.VISIBLE);
+
+                        FontAwesomeIcons icon;
+                        int color;
+                        if (pd.gender.equals("m")) {
+                            icon = FontAwesomeIcons.fa_male;
+                            color = R.color.male_icon;
+                        } else {
+                            icon = FontAwesomeIcons.fa_female;
+                            color = R.color.female_icon;
+                        }
+
+                        Drawable genderIcon = new IconDrawable(getActivity(), icon).colorRes(color).sizeDp(40);
+                        ((ImageView)fragmentView.findViewById(R.id.genderImageView)).setImageDrawable(genderIcon);
+
+                        return true;
+                    }
+                });
 
                 LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
@@ -67,6 +103,9 @@ public class MapFragment extends Fragment {
                     LatLng latLng = new LatLng(event.getLatitude(), event.getLongitude());
                     FamilyModel.Person person = familyModel.getPerson(event.getPersonID());
                     Marker marker = googleMap.addMarker(new MarkerOptions().position(latLng).title(person.getFirstName() + " " + person.getLastName() + " (" + event.getEventType() + " - " + event.getYear() + ")").snippet(event.getCity() + ", " + event.getCountry()));
+
+                    PersonData personData = new PersonData(person.getPersonID(),person.getFirstName() + " " + person.getLastName(), event.getEventType(), event.getCity(), event.getCountry(), event.getYear(), person.getGender());
+                    marker.setTag(personData);
 
                     float markerColor;
 
@@ -92,13 +131,35 @@ public class MapFragment extends Fragment {
 
                 LatLngBounds bounds = builder.build();
 
-                int padding = 100; // offset from edges of the map in pixels
-                CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-
-                googleMap.moveCamera(cu);
+                // adjust bounds of map to show the visible markers
+//                int padding = 100; // offset from edges of the map in pixels
+//                CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+//                googleMap.moveCamera(cu);
             }
-        });
+        };
+
+        mapView.getMapAsync(omrc);
 
         return fragmentView;
+    }
+
+    class PersonData {
+        String personId;
+        String fullName;
+        String event;
+        String city;
+        String country;
+        int year;
+        String gender;
+
+        PersonData(String personId, String fullName, String event, String city, String country, int year, String gender) {
+            this.personId = personId;
+            this.fullName = fullName;
+            this.event = event;
+            this.city = city;
+            this.country = country;
+            this.year = year;
+            this.gender = gender;
+        }
     }
 }

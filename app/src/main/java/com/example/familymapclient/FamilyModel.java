@@ -1,9 +1,10 @@
 package com.example.familymapclient;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FamilyModel {
+public class FamilyModel implements Serializable {
 
     private List<Person> persons = new ArrayList<>();
     private List<Event> events = new ArrayList<>();
@@ -37,7 +38,19 @@ public class FamilyModel {
         events.add(event);
     }
 
-    static public class Person {
+    public List<Event> getEvents(String personId) {
+        List<Event> list = new ArrayList<>();
+
+        for (Event event : events) {
+            if (event.getPersonID().equals(personId)) {
+                list.add(event);
+            }
+        }
+
+        return list;
+    }
+
+    static public class Person implements Serializable {
         /** Person primary key */
         private String personID;
         /** Descendant */
@@ -111,7 +124,7 @@ public class FamilyModel {
         }
     }
 
-    static public class Event {
+    static public class Event implements Serializable {
         /** Event ID */
         private String eventID;
         /** Desendant */
