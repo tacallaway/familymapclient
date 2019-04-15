@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,9 +33,15 @@ public class MapFragment extends Fragment {
     private GoogleMap googleMap;
     private FamilyModel familyModel;
     private PersonData pd;
+    private FragmentActivity fragmentActivity;
+    private String eventId;
 
     public void setFamilyModel(FamilyModel familyModel) {
         this.familyModel = familyModel;
+    }
+
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
     }
 
     @Override
@@ -47,10 +54,14 @@ public class MapFragment extends Fragment {
 
         ((ImageView)fragmentView.findViewById(R.id.genderImageView)).setImageDrawable(genderIcon);
 
+        fragmentActivity = getActivity();
+
         fragmentView.findViewById(R.id.eventInformation).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (fragmentView.findViewById(R.id.introText).getVisibility() == View.VISIBLE) {
+                boolean onEventActivity = fragmentActivity instanceof EventActivity;
+
+                if (!onEventActivity && fragmentView.findViewById(R.id.introText).getVisibility() == View.VISIBLE) {
                     return;
                 }
 
@@ -58,6 +69,10 @@ public class MapFragment extends Fragment {
                 intent.putExtra("PERSON_ID", pd.personId);
                 intent.putExtra("FAMILY_MODEL", familyModel);
                 startActivity(intent);
+
+                if (onEventActivity) {
+                    fragmentActivity.finish();
+                }
             }
         });
 
@@ -99,10 +114,15 @@ public class MapFragment extends Fragment {
 
                 LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
+                Marker centerMarker = null;
                 for (FamilyModel.Event event : familyModel.getEvents()) {
                     LatLng latLng = new LatLng(event.getLatitude(), event.getLongitude());
                     FamilyModel.Person person = familyModel.getPerson(event.getPersonID());
                     Marker marker = googleMap.addMarker(new MarkerOptions().position(latLng).title(person.getFirstName() + " " + person.getLastName() + " (" + event.getEventType() + " - " + event.getYear() + ")").snippet(event.getCity() + ", " + event.getCountry()));
+
+                    if (eventId != null && eventId.equals(event.getEventID())) {
+                        centerMarker = marker;
+                    }
 
                     PersonData personData = new PersonData(person.getPersonID(),person.getFirstName() + " " + person.getLastName(), event.getEventType(), event.getCity(), event.getCountry(), event.getYear(), person.getGender());
                     marker.setTag(personData);
@@ -129,12 +149,22 @@ public class MapFragment extends Fragment {
                     builder.include(marker.getPosition());
                 }
 
-                LatLngBounds bounds = builder.build();
+                if (centerMarker != null) {
+                    pd = (PersonData)centerMarker.getTag();
+                    ((TextView)fragmentView.findViewById(R.id.textName)).setText(pd.fullName);
+                    ((TextView)fragmentView.findViewById(R.id.textEvent)).setText(pd.event + ": " + pd.city + ", " + pd.country + " (" + pd.year + ")");
+                    fragmentView.findViewById(R.id.introText).setVisibility(View.GONE);
+                    fragmentView.findViewById(R.id.personInfo).setVisibility(View.VISIBLE);
 
+                    CameraUpdate cu = CameraUpdateFactory.newLatLng(centerMarker.getPosition());
+                    googleMap.moveCamera(cu);
+                }
+
+//                LatLngBounds bounds = builder.build();
+//
                 // adjust bounds of map to show the visible markers
 //                int padding = 100; // offset from edges of the map in pixels
 //                CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
-//                googleMap.moveCamera(cu);
             }
         };
 

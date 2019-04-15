@@ -1,11 +1,14 @@
 package com.example.familymapclient;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,16 +21,18 @@ public class PersonActivity extends AppCompatActivity {
     ExpandableListAdapter expandableListAdapter;
     List<String> expandableListTitle;
     HashMap<String, List<String>> expandableListDetail;
+    PersonActivity thisActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.person_activity);
+        thisActivity = this;
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         String personId = getIntent().getStringExtra("PERSON_ID");
-        FamilyModel familyModel = (FamilyModel)getIntent().getSerializableExtra("FAMILY_MODEL");
+        familyModel = (FamilyModel)getIntent().getSerializableExtra("FAMILY_MODEL");
 
         FamilyModel.Person person = familyModel.getPerson(personId);
 
@@ -40,6 +45,35 @@ public class PersonActivity extends AppCompatActivity {
         expandableListTitle = new ArrayList(expandableListDetail.keySet());
         expandableListAdapter = new CustomExpandableListAdapter(this, expandableListTitle, expandableListDetail);
         expandableListView.setAdapter(expandableListAdapter);
+
+        expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView parent, View v,
+                                        int groupPosition, int childPosition, long id) {
+                String familyRow = expandableListDetail.get(
+                        expandableListTitle.get(groupPosition)).get(
+                        childPosition);
+                String[] values = familyRow.split("\\|");
+                String personOrEventId = values[0];
+
+                Intent intent;
+                if (groupPosition == 0) {
+                    // life events
+                    intent = new Intent(thisActivity, EventActivity.class);
+                    intent.putExtra("EVENT_ID", personOrEventId);
+                } else {
+                    // family
+                    intent = new Intent(thisActivity, PersonActivity.class);
+                    intent.putExtra("PERSON_ID", personOrEventId);
+                }
+
+                intent.putExtra("FAMILY_MODEL", familyModel);
+                startActivity(intent);
+                finish();
+
+                return false;
+            }
+        });
     }
 
     public boolean onOptionsItemSelected(MenuItem item){

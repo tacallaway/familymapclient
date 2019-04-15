@@ -42,7 +42,18 @@ public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
     @Override
     public View getChildView(int listPosition, final int expandedListPosition,
                              boolean isLastChild, View convertView, ViewGroup parent) {
-        final String expandedListText = (String) getChild(listPosition, expandedListPosition);
+        String expandedListText = (String) getChild(listPosition, expandedListPosition);
+
+        String[] values = expandedListText.split("\\|");
+        String personId = values[0];
+        String gender = null;
+        if (values.length == 3) {
+            gender = values[1];
+            expandedListText = values[2];
+        } else {
+            expandedListText = values[1];
+        }
+
         if (convertView == null) {
             LayoutInflater layoutInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -53,19 +64,21 @@ public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
 
         FontAwesomeIcons icon;
         int color;
-        if (expandedListText.startsWith("m|")) {
-            icon = FontAwesomeIcons.fa_male;
-            color = R.color.male_icon;
-        } else if (expandedListText.startsWith("f|")) {
-            icon = FontAwesomeIcons.fa_female;
-            color = R.color.female_icon;
+        if (gender != null) {
+            if (gender.equals("m")) {
+                icon = FontAwesomeIcons.fa_male;
+                color = R.color.male_icon;
+            } else {
+                icon = FontAwesomeIcons.fa_female;
+                color = R.color.female_icon;
+            }
         } else {
             icon = FontAwesomeIcons.fa_map_marker;
             color = R.color.colorMarkerGrey;
         }
 
         Drawable genderIcon = new IconDrawable(context, icon).colorRes(color).sizeDp(30);
-        ((ImageView)convertView.findViewById(R.id.familyListImage)).setImageDrawable(genderIcon);
+        ((ImageView)convertView.findViewById(R.id.itemListImage)).setImageDrawable(genderIcon);
 
         return convertView;
     }

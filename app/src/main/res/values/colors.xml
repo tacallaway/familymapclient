@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#D81B60</color>
+    <color name="colorPrimary">#262626</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="colorAccent">#009b8e</color>
+    <color name="colorBackground">#ffffff</color>
+    <color name="male_icon">#3ed17e</color>
+    <color name="female_icon">#9f5eb9</color>
+    <color name="android_icon">#a9c93f</color>
+    <color name="colorBackgroundGrey">#EFEFEF</color>
+    <color name="colorMarkerGrey">#bfbfbf</color>
+    <color name="black_overlay">#66000000</color>
 </resources>

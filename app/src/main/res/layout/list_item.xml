@@ -2,10 +2,11 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal" android:layout_width="match_parent"
+    android:id="@+id/itemListRow"
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/familyListImage"
+        android:id="@+id/itemListImage"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:paddingLeft="10dp"
