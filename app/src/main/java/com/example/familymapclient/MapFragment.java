@@ -8,6 +8,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -35,6 +38,11 @@ public class MapFragment extends Fragment {
     private PersonData pd;
     private FragmentActivity fragmentActivity;
     private String eventId;
+    private boolean hideOptions = false;
+
+    public void setHideOptions(boolean hideOptions) {
+        this.hideOptions = hideOptions;
+    }
 
     public void setFamilyModel(FamilyModel familyModel) {
         this.familyModel = familyModel;
@@ -42,6 +50,36 @@ public class MapFragment extends Fragment {
 
     public void setEventId(String eventId) {
         this.eventId = eventId;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        if (!hideOptions) {
+            inflater.inflate(R.menu.main_menu, menu);
+
+            MenuItem menuItem = menu.findItem(R.id.menu_settings);
+            menuItem.setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_gear)
+                    .colorRes(R.color.colorMarkerGrey)
+                    .actionBarSize());
+
+            menuItem = menu.findItem(R.id.menu_filter);
+            menuItem.setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_filter)
+                    .colorRes(R.color.colorMarkerGrey)
+                    .actionBarSize());
+
+            menuItem = menu.findItem(R.id.menu_search);
+            menuItem.setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_search)
+                    .colorRes(R.color.colorMarkerGrey)
+                    .actionBarSize());
+
+            super.onCreateOptionsMenu(menu,inflater);
+        }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -167,6 +205,8 @@ public class MapFragment extends Fragment {
 //                CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
             }
         };
+
+        setHasOptionsMenu(true);
 
         mapView.getMapAsync(omrc);
 

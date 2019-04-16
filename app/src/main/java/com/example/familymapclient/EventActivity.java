@@ -26,6 +26,7 @@ public class EventActivity extends AppCompatActivity {
         Iconify.with(new FontAwesomeModule());
 
         MapFragment mapFragment = new MapFragment();
+        mapFragment.setHideOptions(true);
         mapFragment.setFamilyModel(familyModel);
         mapFragment.setEventId(eventId);
 

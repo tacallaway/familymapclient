@@ -9,16 +9,16 @@ public class ExpandableListData {
 
     public static HashMap<String, List<String>> getData(String personId, FamilyModel familyModel) {
 
+        FamilyModel.Person person = familyModel.getPerson(personId);
 
         HashMap<String, List<String>> expandableListDetail = new HashMap<>();
 
         List<String> lifeEvents = new ArrayList<>();
         for (FamilyModel.Event event : familyModel.getEvents(personId)) {
-            lifeEvents.add(event.getEventID() + "|" + event.getEventType() + ": " + event.getCity() + ", " + event.getCountry());
+            lifeEvents.add(event.getEventID() + "|" + event.getEventType() + ": " + event.getCity() + ", " + event.getCountry() + "\n" + person.getFirstName() + " " + person.getLastName());
         }
 
         List<String> family = new ArrayList<>();
-        FamilyModel.Person person = familyModel.getPerson(personId);
         if (!person.getFather().equals("null")) {
             FamilyModel.Person father = familyModel.getPerson(person.getFather());
             family.add(father.getPersonID() + "|" + father.getGender() + "|" + father.getFirstName() + " " + father.getLastName() + "\nFather");
