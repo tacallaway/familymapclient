@@ -34,6 +34,19 @@ public class FamilyModel implements Serializable {
         return events;
     }
 
+    public Event getEvent(String eventId) {
+        Event e = null;
+
+        for (Event event : events) {
+            if (event.getEventID().equals(eventId)) {
+                e = event;
+                break;
+            }
+        }
+
+        return e;
+    }
+
     public void addEvent(Event event) {
         events.add(event);
     }

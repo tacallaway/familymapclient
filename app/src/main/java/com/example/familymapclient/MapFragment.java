@@ -1,6 +1,7 @@
 package com.example.familymapclient;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,10 +27,18 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 public class MapFragment extends Fragment {
+
+    private static SettingsData settings;
+    private static List<Marker> markers = new ArrayList<>();
 
     private View fragmentView;
     private MapView mapView;
@@ -39,6 +48,8 @@ public class MapFragment extends Fragment {
     private FragmentActivity fragmentActivity;
     private String eventId;
     private boolean hideOptions = false;
+
+    private static final int SETTINGS_ACTIVITY = 1;
 
     public void setHideOptions(boolean hideOptions) {
         this.hideOptions = hideOptions;
@@ -61,6 +72,15 @@ public class MapFragment extends Fragment {
             menuItem.setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_gear)
                     .colorRes(R.color.colorMarkerGrey)
                     .actionBarSize());
+            menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    Intent intent = new Intent(getActivity(), SettingsActivity.class);
+                    intent.putExtra("SETTINGS", settings);
+                    startActivityForResult(intent, SETTINGS_ACTIVITY);
+                    return false;
+                }
+            });
 
             menuItem = menu.findItem(R.id.menu_filter);
             menuItem.setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_filter)
@@ -73,6 +93,30 @@ public class MapFragment extends Fragment {
                     .actionBarSize());
 
             super.onCreateOptionsMenu(menu,inflater);
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        settings = (SettingsData)data.getSerializableExtra("SETTINGS");
+
+        if (requestCode == SETTINGS_ACTIVITY) {
+            switch (settings.mapType) {
+                case 0:
+                    googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                    break;
+                case 1:
+                    googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                    break;
+                case 2:
+                    googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                    break;
+                case 3:
+                    googleMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                    break;
+            }
         }
     }
 
@@ -152,17 +196,21 @@ public class MapFragment extends Fragment {
 
                 LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
+                markers.clear();
+
                 Marker centerMarker = null;
                 for (FamilyModel.Event event : familyModel.getEvents()) {
                     LatLng latLng = new LatLng(event.getLatitude(), event.getLongitude());
                     FamilyModel.Person person = familyModel.getPerson(event.getPersonID());
                     Marker marker = googleMap.addMarker(new MarkerOptions().position(latLng).title(person.getFirstName() + " " + person.getLastName() + " (" + event.getEventType() + " - " + event.getYear() + ")").snippet(event.getCity() + ", " + event.getCountry()));
 
+                    markers.add(marker);
+
                     if (eventId != null && eventId.equals(event.getEventID())) {
                         centerMarker = marker;
                     }
 
-                    PersonData personData = new PersonData(person.getPersonID(),person.getFirstName() + " " + person.getLastName(), event.getEventType(), event.getCity(), event.getCountry(), event.getYear(), person.getGender());
+                    PersonData personData = new PersonData(person.getPersonID(),person.getFirstName() + " " + person.getLastName(), event.getEventType(), event.getCity(), event.getCountry(), event.getYear(), person.getGender(), event.getEventID());
                     marker.setTag(personData);
 
                     float markerColor;
@@ -203,6 +251,106 @@ public class MapFragment extends Fragment {
                 // adjust bounds of map to show the visible markers
 //                int padding = 100; // offset from edges of the map in pixels
 //                CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
+
+                if (eventId == null || settings == null) {
+                    return;
+                }
+
+                String personId = familyModel.getEvent(eventId).getPersonID();
+                FamilyModel.Person p = familyModel.getPerson(personId);
+
+                // life story lines
+                if (settings.storyLines) {
+                    List<Marker> storyLines = new ArrayList<>();
+
+                    for (Marker marker : markers) {
+                        PersonData pd = (PersonData)marker.getTag();
+
+                        if (pd.personId.equals(personId)) {
+                            storyLines.add(marker);
+                        }
+                    }
+
+                    storyLines.sort(new Comparator<Marker>() {
+                        @Override
+                        public int compare(Marker o1, Marker o2) {
+                            return ((PersonData)o1.getTag()).year - ((PersonData)o2.getTag()).year;
+                        }
+                    });
+
+                    Marker temp = null;
+                    for (Marker marker : storyLines) {
+                        if (temp == null) {
+                            temp = marker;
+                        } else {
+                            int color = settings.storyLineColor;
+                            int lineColor = 0;
+                            switch (color) {
+                                case 0:
+                                    lineColor = Color.RED;
+                                    break;
+                                case 1:
+                                    lineColor = Color.GREEN;
+                                    break;
+                                case 2:
+                                    lineColor = Color.BLUE;
+                                    break;
+                            }
+                            PolylineOptions options = new PolylineOptions()
+                                    .add(temp.getPosition(), marker.getPosition())
+                                    .width(5)
+                                    .color(lineColor);
+                            googleMap.addPolyline(options);
+                            temp = marker;
+                        }
+                    }
+                }
+
+                // spouse lines
+                if (settings.spouseLines) {
+                    List<Marker> spouseMarkers = new ArrayList<>();
+                    Marker personMarker = null;
+                    for (Marker marker : markers) {
+                        PersonData pd = (PersonData)marker.getTag();
+
+                        if (pd.personId.equals(p.getSpouse())) {
+                            spouseMarkers.add(marker);
+                        } else if (pd.eventId.equals(eventId)) {
+                            personMarker = marker;
+                        }
+                    }
+
+                    if (spouseMarkers.size() == 0) {
+                        return;
+                    }
+
+                    spouseMarkers.sort(new Comparator<Marker>() {
+                        @Override
+                        public int compare(Marker o1, Marker o2) {
+                            return ((PersonData)o1.getTag()).year - ((PersonData)o2.getTag()).year;
+                        }
+                    });
+
+                    int color = settings.spouseLineColor;
+                    int lineColor = 0;
+                    switch (color) {
+                        case 0:
+                            lineColor = Color.RED;
+                            break;
+                        case 1:
+                            lineColor = Color.GREEN;
+                            break;
+                        case 2:
+                            lineColor = Color.BLUE;
+                            break;
+                    }
+
+                    PolylineOptions options = new PolylineOptions()
+                            .add(personMarker.getPosition(), spouseMarkers.get(0).getPosition())
+                            .width(5)
+                            .color(lineColor);
+                    googleMap.addPolyline(options);
+                }
             }
         };
 
@@ -221,8 +369,9 @@ public class MapFragment extends Fragment {
         String country;
         int year;
         String gender;
+        String eventId;
 
-        PersonData(String personId, String fullName, String event, String city, String country, int year, String gender) {
+        PersonData(String personId, String fullName, String event, String city, String country, int year, String gender, String eventId) {
             this.personId = personId;
             this.fullName = fullName;
             this.event = event;
@@ -230,6 +379,7 @@ public class MapFragment extends Fragment {
             this.country = country;
             this.year = year;
             this.gender = gender;
+            this.eventId = eventId;
         }
     }
 }
