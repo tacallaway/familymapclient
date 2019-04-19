@@ -50,6 +50,7 @@ public class MapFragment extends Fragment {
     private boolean hideOptions = false;
 
     private static final int SETTINGS_ACTIVITY = 1;
+    private static final int SEARCH_ACTIVITY = 2;
 
     public void setHideOptions(boolean hideOptions) {
         this.hideOptions = hideOptions;
@@ -91,6 +92,15 @@ public class MapFragment extends Fragment {
             menuItem.setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_search)
                     .colorRes(R.color.colorMarkerGrey)
                     .actionBarSize());
+            menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    Intent intent = new Intent(getActivity(), SearchActivity.class);
+                    intent.putExtra("FAMILY_MODEL", familyModel);
+                    startActivityForResult(intent, SEARCH_ACTIVITY);
+                    return false;
+                }
+            });
 
             super.onCreateOptionsMenu(menu,inflater);
         }
@@ -99,6 +109,10 @@ public class MapFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (data == null) {
+            return;
+        }
 
         settings = (SettingsData)data.getSerializableExtra("SETTINGS");
 
@@ -168,6 +182,23 @@ public class MapFragment extends Fragment {
             public void onMapReady(GoogleMap mMap) {
                 googleMap = mMap;
 
+                if (settings != null) {
+                    switch (settings.mapType) {
+                        case 0:
+                            googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                            break;
+                        case 1:
+                            googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                            break;
+                        case 2:
+                            googleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                            break;
+                        case 3:
+                            googleMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                            break;
+                    }
+                }
+
                 googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(Marker m) {
@@ -210,7 +241,7 @@ public class MapFragment extends Fragment {
                         centerMarker = marker;
                     }
 
-                    PersonData personData = new PersonData(person.getPersonID(),person.getFirstName() + " " + person.getLastName(), event.getEventType(), event.getCity(), event.getCountry(), event.getYear(), person.getGender(), event.getEventID());
+                    PersonData personData = new PersonData(person.getPersonID(),person.getFirstName() + " " + person.getLastName(), event.getEventType(), event.getCity(), event.getCountry(), event.getYear(), person.getGender(), event.getEventID(), person.getFather(), person.getMother(), person.getSpouse());
                     marker.setTag(personData);
 
                     float markerColor;
@@ -298,7 +329,7 @@ public class MapFragment extends Fragment {
                             }
                             PolylineOptions options = new PolylineOptions()
                                     .add(temp.getPosition(), marker.getPosition())
-                                    .width(5)
+                                    .width(10)
                                     .color(lineColor);
                             googleMap.addPolyline(options);
                             temp = marker;
@@ -310,10 +341,11 @@ public class MapFragment extends Fragment {
                 if (settings.spouseLines) {
                     List<Marker> spouseMarkers = new ArrayList<>();
                     Marker personMarker = null;
+                    String spouseId = p.getSpouse();
                     for (Marker marker : markers) {
                         PersonData pd = (PersonData)marker.getTag();
 
-                        if (pd.personId.equals(p.getSpouse())) {
+                        if (pd.personId.equals(spouseId)) {
                             spouseMarkers.add(marker);
                         } else if (pd.eventId.equals(eventId)) {
                             personMarker = marker;
@@ -347,9 +379,87 @@ public class MapFragment extends Fragment {
 
                     PolylineOptions options = new PolylineOptions()
                             .add(personMarker.getPosition(), spouseMarkers.get(0).getPosition())
-                            .width(5)
+                            .width(10)
                             .color(lineColor);
                     googleMap.addPolyline(options);
+                }
+
+                // family lines
+                if (settings.familyTreeLines) {
+                    Marker personMarker = null;
+                    for (Marker marker : markers) {
+                        PersonData pd = (PersonData)marker.getTag();
+
+                        if (pd.eventId.equals(eventId)) {
+                            personMarker = marker;
+                        }
+                    }
+
+                    int color = settings.familyTreeLinesColor;
+                    int lineColor = 0;
+                    switch (color) {
+                        case 0:
+                            lineColor = Color.RED;
+                            break;
+                        case 1:
+                            lineColor = Color.GREEN;
+                            break;
+                        case 2:
+                            lineColor = Color.BLUE;
+                            break;
+                    }
+
+                    drawFamilyLines(personMarker, markers, 0, lineColor);
+                }
+            }
+
+            private void drawFamilyLines(Marker marker, List<Marker> markers, int generation, int color) {
+                PersonData pd = (PersonData)marker.getTag();
+
+                generation++;
+
+                // father
+                if (pd.fatherId != null) {
+                    for (Marker m : markers) {
+                        PersonData person = (PersonData)m.getTag();
+                        if (pd.fatherId.equals(person.personId) && person.event.equals("birth")) {
+                            int width = 20 - generation*3;
+                            if (width < 1) {
+                                width = 1;
+                            }
+                            PolylineOptions options = new PolylineOptions()
+                                    .add(marker.getPosition(), m.getPosition())
+                                    .width(width)
+                                    .color(color);
+                            googleMap.addPolyline(options);
+
+                            drawFamilyLines(m, markers, generation, color);
+
+                            break;
+                        }
+                    }
+                }
+
+                // mother
+                if (pd.motherId != null) {
+                    for (Marker m : markers) {
+                        PersonData person = (PersonData)m.getTag();
+                        if (pd.motherId.equals(person.personId) && person.event.equals("birth")) {
+                            int width = 20 - generation*3;
+                            if (width < 1) {
+                                width = 1;
+                            }
+                            PolylineOptions options = new PolylineOptions()
+                                    .add(marker.getPosition(), m.getPosition())
+                                    .width(width)
+                                    .color(color);
+                            googleMap.addPolyline(options);
+
+                            drawFamilyLines(m, markers, generation, color);
+
+                            break;
+                        }
+                    }
                 }
             }
         };
@@ -370,8 +480,11 @@ public class MapFragment extends Fragment {
         int year;
         String gender;
         String eventId;
+        String fatherId;
+        String motherId;
+        String spouseId;
 
-        PersonData(String personId, String fullName, String event, String city, String country, int year, String gender, String eventId) {
+        PersonData(String personId, String fullName, String event, String city, String country, int year, String gender, String eventId, String fatherId, String motherId, String spouseId) {
             this.personId = personId;
             this.fullName = fullName;
             this.event = event;
@@ -380,6 +493,9 @@ public class MapFragment extends Fragment {
             this.year = year;
             this.gender = gender;
             this.eventId = eventId;
+            this.fatherId = fatherId;
+            this.motherId = motherId;
+            this.spouseId = spouseId;
         }
     }
 }

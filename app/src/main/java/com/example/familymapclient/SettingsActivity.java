@@ -33,6 +33,23 @@ public class SettingsActivity extends AppCompatActivity {
             ((Spinner)findViewById(R.id.storyLineColor)).setSelection(1);
             ((Spinner)findViewById(R.id.treeLineColor)).setSelection(2);
         }
+
+        findViewById(R.id.logoutButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(v.getContext(), MainActivity.class);
+                intent.putExtra("LOGOUT", true);
+                startActivity(intent);
+                finish();
+            }
+        });
+
+        findViewById(R.id.resyncButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     public boolean onOptionsItemSelected(MenuItem item){
