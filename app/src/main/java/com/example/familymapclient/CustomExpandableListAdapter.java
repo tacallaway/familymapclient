@@ -1,7 +1,5 @@
 package com.example.familymapclient;
 
-import java.util.HashMap;
-import java.util.List;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -14,6 +12,9 @@ import android.widget.TextView;
 
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
+
+import java.util.HashMap;
+import java.util.List;
 
 public class CustomExpandableListAdapter extends BaseExpandableListAdapter {
 

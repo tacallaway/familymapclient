@@ -12,11 +12,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".SearchActivity"
-            android:label="Family Map: Search"></activity>
+        <activity android:name=".FilterActivity"
+            android:label="Family Map: Filter" />
+        <activity
+            android:name=".SearchActivity"
+            android:label="Family Map: Search" />
         <activity
             android:name=".SettingsActivity"
-            android:label="Family Map: Settings"></activity>
+            android:label="Family Map: Settings" />
         <activity
             android:name=".MainActivity"
             android:label="Family Map">

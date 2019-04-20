@@ -11,14 +11,17 @@ public class SearchListData {
 
         for (FamilyModel.Person person : familyModel.getPersons()) {
             if (person.getFirstName().toLowerCase().contains(searchString) || person.getLastName().toLowerCase().contains(searchString)) {
-                searchListData.add("person|" + person.getGender() + "|" + person.getFirstName() + " " + person.getLastName());
+                searchListData.add("person|" + person.getPersonID() + "|" + person.getGender() + "|" + person.getFirstName() + " " + person.getLastName());
             }
         }
 
         for (FamilyModel.Event event : familyModel.getEvents()) {
-            if (event.getCity().toLowerCase().contains(searchString) || event.getCountry().toLowerCase().contains(searchString)) {
+            if (event.getEventType().toLowerCase().contains(searchString) ||
+                    event.getCity().toLowerCase().contains(searchString) ||
+                    event.getCountry().toLowerCase().contains(searchString) ||
+                    String.valueOf(event.getYear()).contains(searchString)) {
                 FamilyModel.Person person = familyModel.getPerson(event.getPersonID());
-                searchListData.add("event|" + event.getCity() + ", " + event.getCountry() + "|" + person.getFirstName() + " " + person.getLastName());
+                searchListData.add("event|" + event.getEventID() + "|" + event.getEventType() + ": " + event.getCity() + ", " + event.getCountry() + " (" + event.getYear() + ")|" + person.getFirstName() + " " + person.getLastName());
             }
         }
 

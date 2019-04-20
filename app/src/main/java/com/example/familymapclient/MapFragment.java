@@ -38,6 +38,7 @@ import java.util.List;
 public class MapFragment extends Fragment {
 
     private static SettingsData settings;
+    private static FiltersData filters;
     private static List<Marker> markers = new ArrayList<>();
 
     private View fragmentView;
@@ -51,6 +52,7 @@ public class MapFragment extends Fragment {
 
     private static final int SETTINGS_ACTIVITY = 1;
     private static final int SEARCH_ACTIVITY = 2;
+    private static final int FILTER_ACTIVITY = 3;
 
     public void setHideOptions(boolean hideOptions) {
         this.hideOptions = hideOptions;
@@ -87,6 +89,16 @@ public class MapFragment extends Fragment {
             menuItem.setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_filter)
                     .colorRes(R.color.colorMarkerGrey)
                     .actionBarSize());
+            menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    Intent intent = new Intent(getActivity(), FilterActivity.class);
+                    intent.putExtra("FAMILY_MODEL", familyModel);
+                    intent.putExtra("FILTERS", filters);
+                    startActivityForResult(intent, FILTER_ACTIVITY);
+                    return false;
+                }
+            });
 
             menuItem = menu.findItem(R.id.menu_search);
             menuItem.setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_search)
@@ -114,9 +126,9 @@ public class MapFragment extends Fragment {
             return;
         }
 
-        settings = (SettingsData)data.getSerializableExtra("SETTINGS");
-
         if (requestCode == SETTINGS_ACTIVITY) {
+            settings = (SettingsData)data.getSerializableExtra("SETTINGS");
+
             switch (settings.mapType) {
                 case 0:
                     googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
@@ -131,6 +143,12 @@ public class MapFragment extends Fragment {
                     googleMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
                     break;
             }
+        }
+
+        if (requestCode == FILTER_ACTIVITY) {
+            filters = (FiltersData)data.getSerializableExtra("FILTERS");
+
+
         }
     }
 

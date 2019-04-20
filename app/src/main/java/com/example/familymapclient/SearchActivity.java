@@ -1,14 +1,13 @@
 package com.example.familymapclient;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.widget.EditText;
-import android.widget.ExpandableListView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +50,8 @@ public class SearchActivity extends AppCompatActivity {
                 }
 
                 searchListAdapter = new SearchListAdapter(activity, searchListData);
+                searchListAdapter.setFamilyModel(familyModel);
+                searchListAdapter.setParentActivity(activity);
                 searchListView.setAdapter(searchListAdapter);
             }
 
