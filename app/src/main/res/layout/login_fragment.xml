@@ -6,16 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".LoginFragment">
 
-    <!--<android.support.v7.widget.Toolbar-->
-        <!--android:id="@+id/login_toolbar"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:background="?attr/colorPrimary"-->
-        <!--app:layout_constraintTop_toTopOf="parent"-->
-        <!--app:title="Family Map"-->
-        <!--app:titleTextColor="@android:color/white"-->
-        <!--tools:layout_editor_absoluteX="0dp" />-->
-
     <TextView
         android:id="@+id/textView13"
         android:layout_width="wrap_content"
@@ -149,7 +139,6 @@
         android:layout_marginRight="8dp"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="Tyler"
         app:layout_constraintBottom_toBottomOf="@+id/textView19"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/textView19"
@@ -177,7 +166,6 @@
         android:layout_marginRight="8dp"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="Callaway"
         app:layout_constraintBottom_toBottomOf="@+id/textView20"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.592"
@@ -206,7 +194,6 @@
         android:layout_marginRight="8dp"
         android:ems="10"
         android:inputType="textEmailAddress"
-        android:text="tacallaway@gmail.com"
         app:layout_constraintBottom_toBottomOf="@+id/textView21"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.607"

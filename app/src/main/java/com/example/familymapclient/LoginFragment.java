@@ -103,6 +103,8 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
         RadioGroup radioGroup = fragmentView.findViewById(R.id.gender);
         radioGroup.setOnCheckedChangeListener(this);
 
+        afterTextChanged(null);
+
         return v;
     }
 
