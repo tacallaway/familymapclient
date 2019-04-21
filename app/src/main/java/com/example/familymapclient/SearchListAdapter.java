@@ -115,7 +115,7 @@ public class SearchListAdapter extends RecyclerView.Adapter {
                 intent.putExtra("FILTERS", filtersData);
                 context.startActivity(intent);
                 parentActivity.finish();
-            } else {
+            } else { // event activity
 
                 String eventID = parts[1];
                 Intent intent = new Intent(context, EventActivity.class);

@@ -207,6 +207,10 @@ public class MapFragment extends Fragment {
             public void onMapReady(GoogleMap mMap) {
                 googleMap = mMap;
 
+                if (familyModel == null) {
+                    return;
+                }
+
                 if (settingsData != null) {
                     switch (settingsData.mapType) {
                         case 0:
@@ -233,18 +237,7 @@ public class MapFragment extends Fragment {
                         fragmentView.findViewById(R.id.introText).setVisibility(View.GONE);
                         fragmentView.findViewById(R.id.personInfo).setVisibility(View.VISIBLE);
 
-                        FontAwesomeIcons icon;
-                        int color;
-                        if (pd.gender.equals("m")) {
-                            icon = FontAwesomeIcons.fa_male;
-                            color = R.color.male_icon;
-                        } else {
-                            icon = FontAwesomeIcons.fa_female;
-                            color = R.color.female_icon;
-                        }
-
-                        Drawable genderIcon = new IconDrawable(getActivity(), icon).colorRes(color).sizeDp(40);
-                        ((ImageView)fragmentView.findViewById(R.id.genderImageView)).setImageDrawable(genderIcon);
+                        setGenderIcon(pd.gender);
 
                         return true;
                     }
@@ -264,6 +257,9 @@ public class MapFragment extends Fragment {
 
                     if (eventId != null && eventId.equals(event.getEventID())) {
                         centerMarker = marker;
+
+                        String gender = familyModel.getPerson(familyModel.getEvent(eventId).getPersonID()).getGender();
+                        setGenderIcon(gender);
                     }
 
                     PersonData personData = new PersonData(person.getPersonID(),person.getFirstName() + " " + person.getLastName(), event.getEventType(), event.getCity(), event.getCountry(), event.getYear(), person.getGender(), event.getEventID(), person.getFather(), person.getMother(), person.getSpouse());
@@ -329,6 +325,21 @@ public class MapFragment extends Fragment {
                 if (settingsData.familyTreeLines) {
                     addFamilyLines();
                 }
+            }
+
+            private void setGenderIcon(String gender) {
+                FontAwesomeIcons icon;
+                int color;
+                if (gender.equals("m")) {
+                    icon = FontAwesomeIcons.fa_male;
+                    color = R.color.male_icon;
+                } else {
+                    icon = FontAwesomeIcons.fa_female;
+                    color = R.color.female_icon;
+                }
+
+                Drawable genderIcon = new IconDrawable(getActivity(), icon).colorRes(color).sizeDp(40);
+                ((ImageView)fragmentView.findViewById(R.id.genderImageView)).setImageDrawable(genderIcon);
             }
 
             private void addSpouseLines(FamilyModel.Person p) {
