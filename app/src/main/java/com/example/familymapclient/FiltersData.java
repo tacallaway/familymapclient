@@ -6,4 +6,5 @@ import java.util.Map;
 
 public class FiltersData implements Serializable {
     public Map<String, Boolean> filters = new HashMap<>();
+    public String currentUser;
 }

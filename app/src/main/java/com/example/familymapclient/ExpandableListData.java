@@ -7,14 +7,14 @@ import java.util.List;
 public class ExpandableListData {
 
 
-    public static HashMap<String, List<String>> getData(String personId, FamilyModel familyModel) {
+    public static HashMap<String, List<String>> getData(String personId, FamilyModel familyModel, FiltersData filtersData) {
 
         FamilyModel.Person person = familyModel.getPerson(personId);
 
         HashMap<String, List<String>> expandableListDetail = new HashMap<>();
 
         List<String> lifeEvents = new ArrayList<>();
-        for (FamilyModel.Event event : familyModel.getEvents(personId)) {
+        for (FamilyModel.Event event : familyModel.getEvents(personId, filtersData)) {
             lifeEvents.add(event.getEventID() + "|" + event.getEventType() + ": " + event.getCity() + ", " + event.getCountry() + "\n" + person.getFirstName() + " " + person.getLastName());
         }
 

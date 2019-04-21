@@ -37,8 +37,8 @@ import java.util.List;
 
 public class MapFragment extends Fragment {
 
-    private static SettingsData settings;
-    private static FiltersData filters;
+    private static SettingsData settingsData;
+    private static FiltersData filtersData;
     private static List<Marker> markers = new ArrayList<>();
 
     private View fragmentView;
@@ -79,7 +79,7 @@ public class MapFragment extends Fragment {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     Intent intent = new Intent(getActivity(), SettingsActivity.class);
-                    intent.putExtra("SETTINGS", settings);
+                    intent.putExtra("SETTINGS", settingsData);
                     startActivityForResult(intent, SETTINGS_ACTIVITY);
                     return false;
                 }
@@ -94,7 +94,7 @@ public class MapFragment extends Fragment {
                 public boolean onMenuItemClick(MenuItem item) {
                     Intent intent = new Intent(getActivity(), FilterActivity.class);
                     intent.putExtra("FAMILY_MODEL", familyModel);
-                    intent.putExtra("FILTERS", filters);
+                    intent.putExtra("FILTERS", filtersData);
                     startActivityForResult(intent, FILTER_ACTIVITY);
                     return false;
                 }
@@ -109,6 +109,7 @@ public class MapFragment extends Fragment {
                 public boolean onMenuItemClick(MenuItem item) {
                     Intent intent = new Intent(getActivity(), SearchActivity.class);
                     intent.putExtra("FAMILY_MODEL", familyModel);
+                    intent.putExtra("FILTERS", filtersData);
                     startActivityForResult(intent, SEARCH_ACTIVITY);
                     return false;
                 }
@@ -127,9 +128,9 @@ public class MapFragment extends Fragment {
         }
 
         if (requestCode == SETTINGS_ACTIVITY) {
-            settings = (SettingsData)data.getSerializableExtra("SETTINGS");
+            settingsData = (SettingsData)data.getSerializableExtra("SETTINGS");
 
-            switch (settings.mapType) {
+            switch (settingsData.mapType) {
                 case 0:
                     googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                     break;
@@ -146,9 +147,8 @@ public class MapFragment extends Fragment {
         }
 
         if (requestCode == FILTER_ACTIVITY) {
-            filters = (FiltersData)data.getSerializableExtra("FILTERS");
-
-
+            filtersData = (FiltersData)data.getSerializableExtra("FILTERS");
+            buildMap();
         }
     }
 
@@ -164,6 +164,12 @@ public class MapFragment extends Fragment {
 
         fragmentView = inflater.inflate(R.layout.map_fragment, container, false);
 
+        buildMap();
+
+        return fragmentView;
+    }
+
+    private void buildMap() {
         Drawable genderIcon = new IconDrawable(getActivity(), FontAwesomeIcons.fa_android).colorRes(R.color.android_icon).sizeDp(40);
 
         ((ImageView)fragmentView.findViewById(R.id.genderImageView)).setImageDrawable(genderIcon);
@@ -182,6 +188,7 @@ public class MapFragment extends Fragment {
                 Intent intent = new Intent(getActivity(), PersonActivity.class);
                 intent.putExtra("PERSON_ID", pd.personId);
                 intent.putExtra("FAMILY_MODEL", familyModel);
+                intent.putExtra("FILTERS", filtersData);
                 startActivity(intent);
 
                 if (onEventActivity) {
@@ -191,7 +198,7 @@ public class MapFragment extends Fragment {
         });
 
         mapView = fragmentView.findViewById(R.id.mapView);
-        mapView.onCreate(savedInstanceState);
+        mapView.onCreate(null);
 
         mapView.onResume(); // needed to get the map to display immediately
 
@@ -200,8 +207,8 @@ public class MapFragment extends Fragment {
             public void onMapReady(GoogleMap mMap) {
                 googleMap = mMap;
 
-                if (settings != null) {
-                    switch (settings.mapType) {
+                if (settingsData != null) {
+                    switch (settingsData.mapType) {
                         case 0:
                             googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                             break;
@@ -248,7 +255,7 @@ public class MapFragment extends Fragment {
                 markers.clear();
 
                 Marker centerMarker = null;
-                for (FamilyModel.Event event : familyModel.getEvents()) {
+                for (FamilyModel.Event event : familyModel.getEvents(filtersData)) {
                     LatLng latLng = new LatLng(event.getLatitude(), event.getLongitude());
                     FamilyModel.Person person = familyModel.getPerson(event.getPersonID());
                     Marker marker = googleMap.addMarker(new MarkerOptions().position(latLng).title(person.getFirstName() + " " + person.getLastName() + " (" + event.getEventType() + " - " + event.getYear() + ")").snippet(event.getCity() + ", " + event.getCountry()));
@@ -301,7 +308,7 @@ public class MapFragment extends Fragment {
 //                int padding = 100; // offset from edges of the map in pixels
 //                CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, padding);
 
-                if (eventId == null || settings == null) {
+                if (eventId == null || settingsData == null) {
                     return;
                 }
 
@@ -309,7 +316,7 @@ public class MapFragment extends Fragment {
                 FamilyModel.Person p = familyModel.getPerson(personId);
 
                 // life story lines
-                if (settings.storyLines) {
+                if (settingsData.storyLines) {
                     List<Marker> storyLines = new ArrayList<>();
 
                     for (Marker marker : markers) {
@@ -332,7 +339,7 @@ public class MapFragment extends Fragment {
                         if (temp == null) {
                             temp = marker;
                         } else {
-                            int color = settings.storyLineColor;
+                            int color = settingsData.storyLineColor;
                             int lineColor = 0;
                             switch (color) {
                                 case 0:
@@ -356,7 +363,7 @@ public class MapFragment extends Fragment {
                 }
 
                 // spouse lines
-                if (settings.spouseLines) {
+                if (settingsData.spouseLines) {
                     List<Marker> spouseMarkers = new ArrayList<>();
                     Marker personMarker = null;
                     String spouseId = p.getSpouse();
@@ -381,7 +388,7 @@ public class MapFragment extends Fragment {
                         }
                     });
 
-                    int color = settings.spouseLineColor;
+                    int color = settingsData.spouseLineColor;
                     int lineColor = 0;
                     switch (color) {
                         case 0:
@@ -403,7 +410,7 @@ public class MapFragment extends Fragment {
                 }
 
                 // family lines
-                if (settings.familyTreeLines) {
+                if (settingsData.familyTreeLines) {
                     Marker personMarker = null;
                     for (Marker marker : markers) {
                         PersonData pd = (PersonData)marker.getTag();
@@ -413,7 +420,7 @@ public class MapFragment extends Fragment {
                         }
                     }
 
-                    int color = settings.familyTreeLinesColor;
+                    int color = settingsData.familyTreeLinesColor;
                     int lineColor = 0;
                     switch (color) {
                         case 0:
@@ -485,8 +492,6 @@ public class MapFragment extends Fragment {
         setHasOptionsMenu(true);
 
         mapView.getMapAsync(omrc);
-
-        return fragmentView;
     }
 
     class PersonData {

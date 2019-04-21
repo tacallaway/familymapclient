@@ -3,11 +3,21 @@ package com.example.familymapclient;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class FamilyModel implements Serializable {
 
     private List<Person> persons = new ArrayList<>();
     private List<Event> events = new ArrayList<>();
+    private String currentUser;
+
+    public void setCurrentUser(String currentUser) {
+        this.currentUser = currentUser;
+    }
+
+    public String getCurrentUser() {
+        return currentUser;
+    }
 
     public List<Person> getPersons() {
         return persons;
@@ -32,6 +42,75 @@ public class FamilyModel implements Serializable {
 
     public List<Event> getEvents() {
         return events;
+    }
+
+    public List<Event> getEvents(FiltersData filtersData) {
+        if (filtersData == null) {
+            return events;
+        }
+
+        List<Event> filteredEvents = new ArrayList<>();
+        Map<String, Boolean> filters = filtersData.filters;
+
+        for (Event event : events) {
+            if (!filters.containsKey(event.getEventType()) || filters.get(event.getEventType())) {
+                filteredEvents.add(event);
+            }
+        }
+
+        Person currentPerson = getPerson(getCurrentUser());
+
+        if (filters.containsKey("father") && !filters.get("father")) {
+            filteredEvents = filterParentSide(filteredEvents, currentPerson.getFather());
+        }
+
+        if (filters.containsKey("mother") && !filters.get("mother")) {
+            filteredEvents = filterParentSide(filteredEvents, currentPerson.getMother());
+        }
+
+        if (filters.containsKey("male") && !filters.get("male")) {
+            filteredEvents = filterGender(filteredEvents, "m");
+        }
+
+        if (filters.containsKey("female") && !filters.get("female")) {
+            filteredEvents = filterGender(filteredEvents, "f");
+        }
+
+        return filteredEvents;
+    }
+
+    private List<Event> filterGender(List<Event> events, String gender) {
+        List<Event> filteredEvents = new ArrayList<>();
+
+        for (Event event : events) {
+            Person person = getPerson(event.getPersonID());
+            if (!person.getGender().equals(gender)) {
+                filteredEvents.add(event);
+            }
+        }
+
+        return filteredEvents;
+    }
+
+    private List<Event> filterParentSide(List<Event> events, String personId) {
+        if (personId == null || personId.equals("null")) {
+            return events;
+        }
+
+        List<Event> filteredEvents = new ArrayList<>();
+
+        for (Event event : events) {
+            if (!event.getPersonID().equals(personId)) {
+                filteredEvents.add(event);
+            }
+        }
+
+        Person person = getPerson(personId);
+
+        filteredEvents = filterParentSide(filteredEvents, person.getFather());
+        filteredEvents = filterParentSide(filteredEvents, person.getMother());
+
+        return filteredEvents;
     }
 
     public Event getEvent(String eventId) {
@@ -61,6 +140,18 @@ public class FamilyModel implements Serializable {
         }
 
         return list;
+    }
+
+    public List<Event> getEvents(String personId, FiltersData filtersData) {
+        List<Event> filteredList = new ArrayList<>();
+
+        for (Event event : this.getEvents(filtersData)) {
+            if (event.getPersonID().equals(personId)) {
+                filteredList.add(event);
+            }
+        }
+
+        return filteredList;
     }
 
     static public class Person implements Serializable {

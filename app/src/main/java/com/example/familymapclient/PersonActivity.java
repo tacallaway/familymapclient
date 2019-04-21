@@ -27,11 +27,13 @@ public class PersonActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.person_activity);
         thisActivity = this;
+        final FiltersData filtersData;
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         String personId = getIntent().getStringExtra("PERSON_ID");
         familyModel = (FamilyModel)getIntent().getSerializableExtra("FAMILY_MODEL");
+        filtersData = (FiltersData) getIntent().getSerializableExtra("FILTERS");
 
         FamilyModel.Person person = familyModel.getPerson(personId);
 
@@ -40,7 +42,7 @@ public class PersonActivity extends AppCompatActivity {
         ((TextView)findViewById(R.id.textPersonGender)).setText(person.getGender().equals("m") ? "Male" : "Female");
 
         expandableListView = findViewById(R.id.familyList);
-        expandableListDetail = ExpandableListData.getData(personId, familyModel);
+        expandableListDetail = ExpandableListData.getData(personId, familyModel, filtersData);
         expandableListTitle = new ArrayList(expandableListDetail.keySet());
         expandableListAdapter = new CustomExpandableListAdapter(this, expandableListTitle, expandableListDetail);
         expandableListView.setAdapter(expandableListAdapter);
@@ -67,6 +69,7 @@ public class PersonActivity extends AppCompatActivity {
                 }
 
                 intent.putExtra("FAMILY_MODEL", familyModel);
+                intent.putExtra("FILTERS", filtersData);
                 startActivity(intent);
                 finish();
 

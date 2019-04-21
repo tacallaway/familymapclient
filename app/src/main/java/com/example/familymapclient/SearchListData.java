@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SearchListData {
-    public static List<String> getData(String searchString, FamilyModel familyModel) {
+    public static List<String> getData(String searchString, FamilyModel familyModel, FiltersData filtersData) {
 
         searchString = searchString.toLowerCase();
         List<String> searchListData = new ArrayList<>();
@@ -15,7 +15,7 @@ public class SearchListData {
             }
         }
 
-        for (FamilyModel.Event event : familyModel.getEvents()) {
+        for (FamilyModel.Event event : familyModel.getEvents(filtersData)) {
             if (event.getEventType().toLowerCase().contains(searchString) ||
                     event.getCity().toLowerCase().contains(searchString) ||
                     event.getCountry().toLowerCase().contains(searchString) ||

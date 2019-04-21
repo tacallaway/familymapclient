@@ -23,22 +23,16 @@ public class SearchListAdapter extends RecyclerView.Adapter {
     private List<String> searchList;
     private LayoutInflater layoutInflater;
     private FamilyModel familyModel;
-    SearchActivity parentActivity;
+    private SearchActivity parentActivity;
+    private FiltersData filtersData;
 
-    public SearchListAdapter(Context context, List<String> searchList) {
+    public SearchListAdapter(Context context, List<String> searchList, SearchActivity parentActivity, FamilyModel familyModel, FiltersData filtersData) {
         this.context = context;
         this.searchList = searchList;
         this.layoutInflater = LayoutInflater.from(context);
-    }
-
-    public void setFamilyModel(FamilyModel familyModel) {
-
-        this.familyModel = familyModel;
-    }
-
-    public void setParentActivity(SearchActivity parentActivity) {
-
         this.parentActivity = parentActivity;
+        this.familyModel = familyModel;
+        this.filtersData = filtersData;
     }
 
     @NonNull
@@ -118,6 +112,7 @@ public class SearchListAdapter extends RecyclerView.Adapter {
                 Intent intent = new Intent(context, PersonActivity.class);
                 intent.putExtra("FAMILY_MODEL", familyModel);
                 intent.putExtra("PERSON_ID", personID);
+                intent.putExtra("FILTERS", filtersData);
                 context.startActivity(intent);
                 parentActivity.finish();
             } else {
@@ -126,6 +121,7 @@ public class SearchListAdapter extends RecyclerView.Adapter {
                 Intent intent = new Intent(context, EventActivity.class);
                 intent.putExtra("FAMILY_MODEL", familyModel);
                 intent.putExtra("EVENT_ID", eventID);
+                intent.putExtra("FILTERS", filtersData);
                 context.startActivity(intent);
                 parentActivity.finish();
             }

@@ -17,6 +17,7 @@ public class SearchActivity extends AppCompatActivity {
     RecyclerView searchListView;
     SearchListAdapter searchListAdapter;
     SearchActivity activity;
+    FiltersData filtersData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +27,7 @@ public class SearchActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         familyModel = (FamilyModel)getIntent().getSerializableExtra("FAMILY_MODEL");
+        filtersData = (FiltersData)getIntent().getSerializableExtra("FILTERS");
 
         this.activity = this;
 
@@ -44,14 +46,12 @@ public class SearchActivity extends AppCompatActivity {
                 List<String> searchListData;
 
                 if (searchString.length() > 0) {
-                    searchListData = SearchListData.getData(s.toString(), familyModel);
+                    searchListData = SearchListData.getData(s.toString(), familyModel, filtersData);
                 } else {
                     searchListData = new ArrayList<String>();
                 }
 
-                searchListAdapter = new SearchListAdapter(activity, searchListData);
-                searchListAdapter.setFamilyModel(familyModel);
-                searchListAdapter.setParentActivity(activity);
+                searchListAdapter = new SearchListAdapter(activity, searchListData, activity, familyModel, filtersData);
                 searchListView.setAdapter(searchListAdapter);
             }
 

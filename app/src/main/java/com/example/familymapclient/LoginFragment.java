@@ -365,6 +365,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
 
         private View view;
         private String authToken;
+        private String personId;
 
         PersonOperation(View view) {
             this.view = view;
@@ -386,6 +387,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
                 con.setRequestMethod("GET");
 
                 authToken = result.getJson().getString("authToken");
+                personId = result.getJson().getString("personID");
                 con.setRequestProperty("authorization", authToken);
 
                 int responseCode = con.getResponseCode();
@@ -419,7 +421,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
             } else {
                 try {
                     JSONArray list = result.getJson().getJSONArray("data");
-                    new EventOperation(view, authToken, list).execute(result);
+                    new EventOperation(view, authToken, personId, list).execute(result);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -432,11 +434,13 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
         private View view;
         private JSONArray personsArray;
         private String authToken;
+        private String personId;
 
-        EventOperation(View view, String authToken, JSONArray personsArray) {
+        EventOperation(View view, String authToken, String personId, JSONArray personsArray) {
             this.view = view;
             this.personsArray = personsArray;
             this.authToken = authToken;
+            this.personId = personId;
         }
 
         @Override
@@ -488,7 +492,7 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
             } else {
                 try {
                     JSONArray eventsArray = result.getJson().getJSONArray("data");
-                    FamilyModel familyModel = getFamilyModel(personsArray, eventsArray);
+                    FamilyModel familyModel = getFamilyModel(personsArray, eventsArray, personId);
                     ((MainActivity)getActivity()).showMapFragment(familyModel);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -497,8 +501,9 @@ public class LoginFragment extends Fragment implements View.OnClickListener, Tex
         }
     }
 
-    private FamilyModel getFamilyModel(JSONArray personsArray, JSONArray eventsArray) {
+    private FamilyModel getFamilyModel(JSONArray personsArray, JSONArray eventsArray, String personId) {
         FamilyModel familyModel = new FamilyModel();
+        familyModel.setCurrentUser(personId);
 
         try {
             List<FamilyModel.Person> persons = familyModel.getPersons();
