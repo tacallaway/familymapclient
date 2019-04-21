@@ -317,125 +317,137 @@ public class MapFragment extends Fragment {
 
                 // life story lines
                 if (settingsData.storyLines) {
-                    List<Marker> storyLines = new ArrayList<>();
-
-                    for (Marker marker : markers) {
-                        PersonData pd = (PersonData)marker.getTag();
-
-                        if (pd.personId.equals(personId)) {
-                            storyLines.add(marker);
-                        }
-                    }
-
-                    storyLines.sort(new Comparator<Marker>() {
-                        @Override
-                        public int compare(Marker o1, Marker o2) {
-                            return ((PersonData)o1.getTag()).year - ((PersonData)o2.getTag()).year;
-                        }
-                    });
-
-                    Marker temp = null;
-                    for (Marker marker : storyLines) {
-                        if (temp == null) {
-                            temp = marker;
-                        } else {
-                            int color = settingsData.storyLineColor;
-                            int lineColor = 0;
-                            switch (color) {
-                                case 0:
-                                    lineColor = Color.RED;
-                                    break;
-                                case 1:
-                                    lineColor = Color.GREEN;
-                                    break;
-                                case 2:
-                                    lineColor = Color.BLUE;
-                                    break;
-                            }
-                            PolylineOptions options = new PolylineOptions()
-                                    .add(temp.getPosition(), marker.getPosition())
-                                    .width(10)
-                                    .color(lineColor);
-                            googleMap.addPolyline(options);
-                            temp = marker;
-                        }
-                    }
+                    addStoryLines(personId);
                 }
 
                 // spouse lines
                 if (settingsData.spouseLines) {
-                    List<Marker> spouseMarkers = new ArrayList<>();
-                    Marker personMarker = null;
-                    String spouseId = p.getSpouse();
-                    for (Marker marker : markers) {
-                        PersonData pd = (PersonData)marker.getTag();
-
-                        if (pd.personId.equals(spouseId)) {
-                            spouseMarkers.add(marker);
-                        } else if (pd.eventId.equals(eventId)) {
-                            personMarker = marker;
-                        }
-                    }
-
-                    if (spouseMarkers.size() == 0) {
-                        return;
-                    }
-
-                    spouseMarkers.sort(new Comparator<Marker>() {
-                        @Override
-                        public int compare(Marker o1, Marker o2) {
-                            return ((PersonData)o1.getTag()).year - ((PersonData)o2.getTag()).year;
-                        }
-                    });
-
-                    int color = settingsData.spouseLineColor;
-                    int lineColor = 0;
-                    switch (color) {
-                        case 0:
-                            lineColor = Color.RED;
-                            break;
-                        case 1:
-                            lineColor = Color.GREEN;
-                            break;
-                        case 2:
-                            lineColor = Color.BLUE;
-                            break;
-                    }
-
-                    PolylineOptions options = new PolylineOptions()
-                            .add(personMarker.getPosition(), spouseMarkers.get(0).getPosition())
-                            .width(10)
-                            .color(lineColor);
-                    googleMap.addPolyline(options);
+                    addSpouseLines(p);
                 }
 
                 // family lines
                 if (settingsData.familyTreeLines) {
-                    Marker personMarker = null;
-                    for (Marker marker : markers) {
-                        PersonData pd = (PersonData)marker.getTag();
-
-                        if (pd.eventId.equals(eventId)) {
-                            personMarker = marker;
-                        }
-                    }
-
-                    int color = settingsData.familyTreeLinesColor;
-                    int lineColor = 0;
-                    switch (color) {
-                        case 0:
-                            lineColor = Color.RED;
-                            break;
-                        case 1:
-                            lineColor = Color.GREEN;
-                            break;
-                        case 2:
-                            lineColor = Color.BLUE;
-                            break;
-                    }
-
-                    drawFamilyLines(personMarker, markers, 0, lineColor);
+                    addFamilyLines();
                 }
+            }
+
+            private void addSpouseLines(FamilyModel.Person p) {
+                List<Marker> spouseMarkers = new ArrayList<>();
+                Marker personMarker = null;
+                String spouseId = p.getSpouse();
+                for (Marker marker : markers) {
+                    PersonData pd = (PersonData)marker.getTag();
+
+                    if (pd.personId.equals(spouseId)) {
+                        spouseMarkers.add(marker);
+                    } else if (pd.eventId.equals(eventId)) {
+                        personMarker = marker;
+                    }
+                }
+
+                if (spouseMarkers.size() == 0) {
+                    return;
+                }
+
+                spouseMarkers.sort(new Comparator<Marker>() {
+                    @Override
+                    public int compare(Marker o1, Marker o2) {
+                        return ((PersonData)o1.getTag()).year - ((PersonData)o2.getTag()).year;
+                    }
+                });
+
+                int color = settingsData.spouseLineColor;
+                int lineColor = 0;
+                switch (color) {
+                    case 0:
+                        lineColor = Color.RED;
+                        break;
+                    case 1:
+                        lineColor = Color.GREEN;
+                        break;
+                    case 2:
+                        lineColor = Color.BLUE;
+                        break;
+                }
+
+                PolylineOptions options = new PolylineOptions()
+                        .add(personMarker.getPosition(), spouseMarkers.get(0).getPosition())
+                        .width(10)
+                        .color(lineColor);
+                googleMap.addPolyline(options);
+            }
+
+            private void addStoryLines(String personId) {
+                List<Marker> storyLines = new ArrayList<>();
+
+                for (Marker marker : markers) {
+                    PersonData pd = (PersonData)marker.getTag();
+
+                    if (pd.personId.equals(personId)) {
+                        storyLines.add(marker);
+                    }
+                }
+
+                storyLines.sort(new Comparator<Marker>() {
+                    @Override
+                    public int compare(Marker o1, Marker o2) {
+                        return ((PersonData)o1.getTag()).year - ((PersonData)o2.getTag()).year;
+                    }
+                });
+
+                Marker temp = null;
+                for (Marker marker : storyLines) {
+                    if (temp == null) {
+                        temp = marker;
+                    } else {
+                        int color = settingsData.storyLineColor;
+                        int lineColor = 0;
+                        switch (color) {
+                            case 0:
+                                lineColor = Color.RED;
+                                break;
+                            case 1:
+                                lineColor = Color.GREEN;
+                                break;
+                            case 2:
+                                lineColor = Color.BLUE;
+                                break;
+                        }
+                        PolylineOptions options = new PolylineOptions()
+                                .add(temp.getPosition(), marker.getPosition())
+                                .width(10)
+                                .color(lineColor);
+                        googleMap.addPolyline(options);
+                        temp = marker;
+                    }
+                }
+            }
+
+            private void addFamilyLines() {
+                Marker personMarker = null;
+                for (Marker marker : markers) {
+                    PersonData pd = (PersonData)marker.getTag();
+
+                    if (pd.eventId.equals(eventId)) {
+                        personMarker = marker;
+                    }
+                }
+
+                int color = settingsData.familyTreeLinesColor;
+                int lineColor = 0;
+                switch (color) {
+                    case 0:
+                        lineColor = Color.RED;
+                        break;
+                    case 1:
+                        lineColor = Color.GREEN;
+                        break;
+                    case 2:
+                        lineColor = Color.BLUE;
+                        break;
+                }
+
+                drawFamilyLines(personMarker, markers, 0, lineColor);
             }
 
             private void drawFamilyLines(Marker marker, List<Marker> markers, int generation, int color) {
