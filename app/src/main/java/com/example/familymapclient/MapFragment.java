@@ -33,6 +33,7 @@ import com.joanzapata.iconify.fonts.FontAwesomeIcons;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 public class MapFragment extends Fragment {
@@ -49,6 +50,9 @@ public class MapFragment extends Fragment {
     private FragmentActivity fragmentActivity;
     private String eventId;
     private boolean hideOptions = false;
+
+    private HashMap<String, Float> colorMap = new HashMap<>();
+    private int colorCount = 0;
 
     private static final int SETTINGS_ACTIVITY = 1;
     private static final int SEARCH_ACTIVITY = 2;
@@ -202,6 +206,10 @@ public class MapFragment extends Fragment {
 
         mapView.onResume(); // needed to get the map to display immediately
 
+        final float[] COLORS = { BitmapDescriptorFactory.HUE_RED, BitmapDescriptorFactory.HUE_ORANGE, BitmapDescriptorFactory.HUE_YELLOW,
+            BitmapDescriptorFactory.HUE_GREEN, BitmapDescriptorFactory.HUE_CYAN, BitmapDescriptorFactory.HUE_AZURE,
+            BitmapDescriptorFactory.HUE_BLUE, BitmapDescriptorFactory.HUE_VIOLET, BitmapDescriptorFactory.HUE_MAGENTA };
+
         OnMapReadyCallback omrc = new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap mMap) {
@@ -265,24 +273,15 @@ public class MapFragment extends Fragment {
                     PersonData personData = new PersonData(person.getPersonID(),person.getFirstName() + " " + person.getLastName(), event.getEventType(), event.getCity(), event.getCountry(), event.getYear(), person.getGender(), event.getEventID(), person.getFather(), person.getMother(), person.getSpouse());
                     marker.setTag(personData);
 
-                    float markerColor;
+                    float markerColor = BitmapDescriptorFactory.HUE_ROSE;
+                    String eventType = event.getEventType();
 
-                    switch (event.getEventType()) {
-                        case "birth":
-                            markerColor = BitmapDescriptorFactory.HUE_GREEN;
-                            break;
-                        case "baptism":
-                            markerColor = BitmapDescriptorFactory.HUE_AZURE;
-                            break;
-                        case "marriage":
-                            markerColor = BitmapDescriptorFactory.HUE_MAGENTA;
-                            break;
-                        case "death":
-                            markerColor = BitmapDescriptorFactory.HUE_RED;
-                            break;
-                        default:
-                            markerColor = BitmapDescriptorFactory.HUE_ROSE;
+                    if (colorMap.containsKey(eventType)) {
+                        markerColor = colorMap.get(eventType);
+                    } else {
+                        colorMap.put(eventType, COLORS[colorCount++]);
                     }
+
                     marker.setIcon(BitmapDescriptorFactory.defaultMarker(markerColor));
                     builder.include(marker.getPosition());
                 }
