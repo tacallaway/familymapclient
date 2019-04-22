@@ -10,7 +10,7 @@ public class FilterListData {
         List<String> eventTypes = new ArrayList<>();
 
         for (FamilyModel.Event event : familyModel.getEvents()) {
-            String eventType = event.getEventType();
+            String eventType = event.getEventType().toLowerCase();
             if (!eventTypes.contains(eventType)) {
                 eventTypes.add(eventType);
                 filterListData.add(eventType + "|" + eventType.substring(0,1).toUpperCase() + eventType.substring(1).toLowerCase() + " Events|FILTER BY " + eventType.toUpperCase() + " EVENTS");
